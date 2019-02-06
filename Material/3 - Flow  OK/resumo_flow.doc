@@ -1,0 +1,32 @@
+RESUMO DOS ALGORITMOS CLASSICOS DE FLOW
+
+Min-Path-Cover:
+	Minimo numero de caminhos para visitar todos os vertices num DAG
+	Constroi o grafo bipartido Vout / Vin, add todas as arestas u-v: out(u) - in(v).
+	add aresta s-out(u) pra todo u, e in(u)-t pra todo u.
+	Tods as arestas com capacidade 1.
+
+Edge-disjoint/independent paths
+
+	Encontre o maior numero de caminhos que nao compartilham nenhuma aresta(edge-disjoint) no caminho de s-t, num grafo qualquer.
+	Encontre o maior numero de caminhos que nao compartilham nenhuma aresta e nenhum vertice(independent path) no caminho de s-t, num grafo qualquer.
+	Coloque o peso de cada aresta igual a 1, e pra independent paths coloque capacidade 1 em cada vertice tambem.
+
+
+Max Weighted Independent Set
+
+	Grafo bipartido,  cada vertice tem um peso, coloque peso[u] como capacidade da aresta s-u, e todas as outras arestas como infinito.
+
+
+
+
+
+COMPLEXIDADE DOS ALGORITMOS
+
+grafos genéricos:
+
+Ford fulkerson: O(f*E)
+Edmonds Karp: VE^2
+Dinic: V^2E
+
+Pra grafos bipartidos a complexidade do Dinic é O(sqrt(V)*E), e a do Ford geralmente é V^2 dependendo do problema.
