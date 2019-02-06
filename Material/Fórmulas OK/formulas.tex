@@ -1,0 +1,165 @@
+\documentclass[12pt]{article}
+% \usepackage{sbc-template}
+\usepackage{graphicx,url}
+%\usepackage[dvips]{graphicx}
+%\usepackage[pdftex]{color,graphicx}
+\usepackage{multicol}
+\usepackage{verbatim}
+\usepackage{array}
+\usepackage{amssymb,amsmath}
+\usepackage[brazilian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{indentfirst}
+\usepackage{listings}   
+\usepackage{pdfpages}
+\sloppy
+
+\title{Fórmulas}
+
+\begin{document}
+
+\includepdf[pages=-, fitpaper=true]{parte1.pdf}
+
+\includepdf[pages=-, fitpaper=true]{SphericalCap.pdf}
+
+% parte1:
+% \includepdf[pages=-, fitpaper=true]{formularioGeomEsp.pdf}
+
+
+% \includepdf[pages=-, fitpaper=true]{rotacionar.pdf}
+
+% parte1:
+% \begin{figure}[!t]
+% \centering
+% \includegraphics[width=\textwidth]{formulas2d.png}
+% \label{f2d}
+% \end{figure}
+
+% parte 1:
+% \begin{figure}[!t]
+% \centering
+% \includegraphics[width=\textwidth]{formulas3d.png}
+% \label{f3d}
+% \end{figure}
+
+\subsection*{Fórmulas da Elipse}
+
+Equações paramétricas: $$\begin{cases} x(t) = a \cos t \\ y(t) = b \sin t \end{cases}$$
+
+Equação cartesiana: $$\dfrac{x^2}{a^2} + \dfrac{y^2}{b^2} = 1 $$
+
+Equação polar: $$ r(\theta) = \dfrac{ab}{\sqrt{(b \cos \theta)^2 + (a \sin \theta)^2 }} $$
+
+Área: $$ A = ab\pi $$ 
+
+Comprimento do arco: $$ s = 4a \cdot E\Big(1 - \dfrac{a^2}{b^2}\Big)$$
+
+O parâmetro focal da elipse é: $$p = \dfrac{b^2}{\sqrt{a^2-b^2}} = \dfrac{a^2-c^2}{c} = \dfrac{a(1-e^2)}{e}$$
+
+\subsection*{Pick Theorem}
+
+Só serve para polígonos com coordenadas inteiras: $A = i + \dfrac{b}{2} - 1$, onde:
+
+\begin{itemize}
+    \item $A = $ Área do polígono
+    \item $i = $ Número de pontos com coordenadas inteiras dentro do polígono
+    \item $b = $ número de pontos com coordenadas inteiras no perímetro do polígono
+\end{itemize}
+
+\subsection*{Probabilidade}
+
+Fórumulas de probabilidade condicional:
+
+$$P(A | B) = P(A \cap B) / P(B)$$
+$$P(A \cap B) = P(A|B) \cdot P(B)$$
+$$P(A \cup B) = P(A) + P(B) - P(A \cap B)$$
+
+\subsection*{Fórmula de Stirling}
+
+$$ n! \approx \sqrt{2\pi n} \Big(\frac{n}{e}\Big)^n $$
+
+\subsection*{Ternos Pitagóricos}
+
+Para quaisquer $a, b \in \mathbb{N}$, são ternos pitagóricos:
+
+$$ \begin{cases}x = a^2 - b^2 \\ y = 2ab \\ z = a^2 + b^2\end{cases} $$
+
+\subsection*{Equações diofantinas}
+
+A equação diofantina linear $ax + by = n$ tem solução inteira, se e somente se, $n | mdc(a, b)$.
+
+A solução da equação pode ser obtida pelo algoritmo de euclides extendido, obtendo os coeficientes $X$ e $Y$ tal que:
+
+$$aX + bY = 1 \Rightarrow aXn + bYn = n $$
+
+Daí, derivam-se as soluções gerais: 
+$$\begin{cases}x = Xn + bt \\ y = Yn - at \end{cases}$$
+
+
+\subsection*{Critérios de divisibilidade bizarros}
+
+\begin{itemize}
+\item Divisibilidade geral: Pra saber se um número $n$ é divísível por $k$, verificar se $n$ é divisível pelas maiores potências da decomposição de $k$ em fatores primos.
+
+\item Divisibilidade por $2^k$: Um número é divisível por $2^k$ se o número formado pelos últimos k algarismos for divisível $2^k$.
+
+\item Dvisibilidade por $7$: Um número é divisível por $7$ se o dobro do último algarismo, subtraído do número sem o último algarismo, for divisível por $7$. 
+
+\item Divisibilidade por $11$: Um número é divisível por $11$ se a soma dos algarismos de ordem par $S_p$ menos a soma dos algarismos de ordem ímpar $S_i$ for um número divisível por $11$. Obs: o algarismo de maior significância tem ordem ímpar.
+
+\item Divisibilidade por $13$: Um número é divisível por $13$ se o quádruplo do último algarismo, somado ao número sem o último algarismo, for divisível por $13$.
+
+\item Divisibilidade por $17$: Um número é divisível por $17$ quando o quíntuplo do último algarismo, subtraído do número que não contém este último algarismo, for divisível por $17$.
+
+\item Divisibilidade por $19$: Um número é divisível por $19$ quando o dobro do último algarismo, somado ao número que não contém este último algarismo, for divisível por $19$.
+
+\item Divisibilidade por $23$: Um número é divisível por $23$ quando o héptuplo do último algarismo, somado ao número que não contém este último algarismo, for divisível por $23$.
+
+\item Divisibilidade por $29$: Um número é divisível por $29$ quando o triplo do último algarismo, subtraído do número que não contém este último algarismo, for divisível por $29$.
+
+\item Divisibilidade por $31$: Um número é divisível por $31$ quando o triplo do último algarismo, somado ao número que não contém este último algarismo, for divisível por $31$.
+
+\item Divisibilidade por $49$: Um número é divisível por $49$ quando o quíntuplo do último algarismo, somado ao número que não contém este último algarismo, for divisível por $49$.
+\end{itemize}
+
+\subsection*{Coisas Aleatórias}
+
+\begin{itemize}
+\item Um número inteiro $n$ pode ser escrito como a diferença de dois quadrados perfeitos $n = x^2-y^2$ se, e somente se, $n$ é ímpar ou múltiplo de $4$.
+
+Se $n$ é multiplo de $4$: $n = 4k = (k+1)^2 - (k-1)^2$.
+
+Se $n$ é ímpar: $n = 2k+1 = (k+1)^2 - k^2$.
+
+
+\item Um número inteiro $n$ pode ser escrito como soma de $3$ quadrados se, e somente se, NÃO é da forma $n = 4^k*(8m+7)$.
+
+
+\item O produto dos divisores positivos de $n$ é $\sqrt{n ^ {qtddDivisores}}$.
+
+\end{itemize}
+
+
+
+% \begin{figure}[!t]
+% \centering
+% \includegraphics[width=\textwidth]{leisenocosseno.png}
+% \label{senocosseno}
+% \end{figure}
+
+% \begin{figure}[!t]
+% \centering
+% \includegraphics[width=\textwidth]{areatriangulo.jpg}
+% \label{area}
+% \end{figure}
+
+% \begin{figure}[!t]
+% \centering
+% \includegraphics[width=\textwidth]{pontosnotaveis.png}
+% \label{pontos}
+% \end{figure}
+
+
+
+\end{document}

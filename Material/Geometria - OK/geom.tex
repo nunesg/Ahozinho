@@ -1,0 +1,1711 @@
+% Tipo do documento
+\documentclass[12pt,a4paper, twoside]{report}
+
+\usepackage{template}
+
+\title{Material Geometria 2017}
+\author{ % Jhúlia Graziella & Yuri Cardoso & Gustavo Nunes \\
+%\vspace{1cm} \\
+Faculdade de Computação \\
+Universidade Federal de Uberlândia
+}
+\date{}
+
+\begin{document}
+  \maketitle
+% -------------------------------------------------------------------- %
+% Listas de figuras, tabelas e códigos criadas automaticamente
+% \lstlistoflistings
+% -------------------------------------------------------------------- %
+
+% -------------------------------------------------------------------- %
+% Sumário
+\tableofcontents    
+
+% Capítulos do trabalho
+
+% cabeçalho para as páginas de todos os capítulos
+\fancyhead[RE,LO]{\thesection}
+
+%\singlespacing              % espaçamento simples
+\setlength{\parskip}{0.15in} % espaçamento entre paragráfos
+
+\chapter{Geometria}
+
+\section{Área da união de retângulos $O(n log^2 n)$}
+\noindent\begin{lstlisting}[caption=Área da união de retângulos (N log^2 N),language=C++]
+struct seg{
+    ll y, tipo;
+    seg(){}
+    seg(ll a, ll b){
+        y = a;
+        tipo = b;
+    }
+    bool operator < (seg other) const{
+        return y > other.tipo;
+    }
+};
+
+struct event{
+    ll x, y, y0, tipo;
+    event(){}
+    event(ll a, ll b, ll c, ll d){
+        x = a;
+        y = b;
+        y0 = c;
+        tipo = d;
+    }
+    bool operator < (event other) const{
+        return x < other.x;
+    }
+};
+
+ll ABRE = 0;
+ll FECHA = 1;
+
+multiset<pair<ll, ll>, greater<pair<ll, ll> > > ativo;
+vector<event> evento;
+
+ll sweep(){
+    ll area=0;
+    ll x=0, x1=0;
+    event eve;
+    ll cnt = 0;
+    ll U=0;
+    ll D=0;
+    //~ ll ans = 0;
+    
+    for (ll i = 0; i < evento.size(); i++)
+    {
+        eve = evento[i];
+        cnt = 0;
+        x1 = eve.x;
+        //~ prllf("%s em x=%d\n", eve.tipo==ABRE ? "abre" : "fecha", eve.x);
+        for(auto it : ativo){
+            //~ oioi;
+            if(it.S == ABRE){
+                if(cnt==0) U = it.F;
+                cnt++;
+            }else if(it.S==FECHA){
+                if(cnt==1){
+                    D = it.F;
+                    //~ prllf("x = %d  x1 = %d  U = %d  D = %d\n", x, x1, U, D);
+                    area += (x1-x)*(U-D);
+                }
+                cnt--;
+            }
+        }
+        
+        if(eve.tipo == ABRE){
+            ativo.insert(mp(eve.y0, ABRE));
+            ativo.insert(mp(eve.y, FECHA));
+        }else{
+            //~ for(auto i : ativo){
+                //~ if(i.F==eve.y && i.S==ABRE) ativo.erase(i);
+                //~ if(i.F==eve.y0 && i.S==FECHA) ativo.erase(i);
+            //~ }
+            ativo.erase(ativo.find(mp(eve.y0, ABRE)));
+            ativo.erase(ativo.find(mp(eve.y, FECHA)));
+        }
+        x = x1;
+        //~ x1 = eve.x;
+    }
+    
+    return area;
+}
+
+int main () {
+    ll n, x, y, larg, alt, x0, y0;
+    cin >> n;
+    for (ll i = 0; i < n; i++)
+    {
+        cin >> x >> y >> x0 >> y0;
+        evento.pb(event(x, y, y0, ABRE));
+        evento.pb(event(x0, y, y0, FECHA));
+    }
+    sort(evento.begin(), evento.end());
+    
+    ll area = sweep();
+    //~ cout << "Area total = " << area << endl;
+    cout << area << endl;
+    
+    return 0;
+}
+\end{lstlisting}
+
+\section{Área da união de retângulos $O(n log n)$}
+\noindent\begin{lstlisting}[caption=Área da união de retângulos (N log N),language=C++]
+#define P(x,y) make_pair(x,y)
+using namespace std;
+class Rectangle{
+    public:
+    int x1 , y1 , x2 , y2;
+    static Rectangle empt;
+    Rectangle(){
+        x1=y1=x2=y2=0;
+    }
+    Rectangle(int X1 , int Y1 , int X2 , int Y2){
+        x1 = X1; y1=Y1;
+        x2 = X2; y2=Y2;
+    }
+    Rectangle intersect(Rectangle R){
+        if(R.x1 >= x2 || R.x2 <= x1) return empt;
+        if(R.y1 >= y2 || R.y2 <= y1) return empt;
+        return Rectangle(max(x1 , R.x1) , max(y1 , R.y1) , min(x2 , R.x2) , min(y2 , R.y2));
+    }
+};
+struct Event{
+    int x , y1 , y2 , type;
+    Event(){}
+    Event(int x , int y1 , int y2 , int type):x(x) , y1(y1) , y2(y2) , type(type){}
+};
+bool operator < (const Event&A , const Event&B){
+    //if(A.x != B.x)
+    return A.x < B.x;
+    //if(A.y1 != B.y1) return A.y1 < B.y1;
+    //if(A.y2 != B.y2()) A.y2 < B.y2;
+}
+const int MX=(1<<17);
+struct Node{
+    int prob , sum , ans;
+    Node(){}
+    Node(int prob , int sum , int ans):prob(prob) , sum(sum) , ans(ans){}
+};
+Node tree[MX*4];
+int interval[MX];
+void build(int x , int a , int b){
+    tree[x] = Node(0 , 0 , 0);
+    if(a==b){
+        tree[x].sum+=interval[a];
+        return;
+    }
+    build(x*2 , a , (a+b)/2);
+    build(x*2+1 , (a+b)/2+1 , b);
+    tree[x].sum = tree[x*2].sum + tree[x*2+1].sum;
+}
+int ask(int x){
+    if(tree[x].prob) return tree[x].sum;
+    return tree[x].ans;
+}
+int st , en , V;
+void update(int x , int a , int b){
+    if(st>b || en<a) return;
+    if(a>=st && b<=en){
+        tree[x].prob+=V;
+        return;
+    }
+    update(x*2 , a , (a+b)/2);
+    update(x*2+1 , (a+b)/2+1 , b);
+    tree[x].ans = ask(x*2) + ask(x*2+1);
+}
+Rectangle Rectangle::empt = Rectangle();
+vector < Rectangle > Rect;
+vector < int > sorted;
+vector < Event > sweep;
+void compressncalc(){
+    sweep.clear();
+    sorted.clear();
+    for(auto R : Rect){
+        sorted.push_back(R.y1);
+        sorted.push_back(R.y2);
+    }
+    sort(sorted.begin() , sorted.end());
+    sorted.erase(unique(sorted.begin() , sorted.end()) , sorted.end());
+    int sz = sorted.size();
+    for(int j=0;j<sorted.size() - 1;j++)
+        interval[j+1] = sorted[j+1] - sorted[j];
+    for(auto R : Rect){
+        sweep.push_back(Event(R.x1 , R.y1 , R.y2 , 1));
+        sweep.push_back(Event(R.x2 , R.y1 , R.y2 , -1));
+    }
+    sort(sweep.begin() , sweep.end());
+    build(1,1,sz-1);
+}
+long long ans;
+void Sweep(){
+    ans=0;
+    if(sorted.empty() || sweep.empty()) return;
+    int last = 0 , sz_ = sorted.size();
+    for(int j=0;j<sweep.size();j++){
+        ans+= 1ll * (sweep[j].x - last) * ask(1);
+        last = sweep[j].x;
+        V = sweep[j].type;
+        st = lower_bound(sorted.begin() , sorted.end() , sweep[j].y1) - sorted.begin() + 1;
+        en = lower_bound(sorted.begin() , sorted.end() , sweep[j].y2) - sorted.begin();
+        update(1 , 1 , sz_-1);
+    }
+}
+int main(){
+//    freopen("in.in","r",stdin);
+    int n;
+    scanf("%d",&n);
+    for(int j=1;j<=n;j++){
+        int a , b ,c  , d;
+        scanf("%d %d %d %d",&a,&b,&c,&d);
+        Rect.push_back(Rectangle(a , b , c , d));
+    }
+    compressncalc();
+    Sweep();
+    cout<<ans<<endl;
+}
+
+\end{lstlisting}
+
+\section{Área da união de retângulos $O(n log n)$ - Outra implementação}
+\noindent\begin{lstlisting}[caption=Área da união de retângulos (N log N) - Outra implementação,language=C++]
+/** Union Of rectangle Area */ 
+
+struct Edge {
+    bool open;
+    int x, yMin, yMax;
+    Edge(int x, int y1, int y2, bool op) {
+        this->x = x;
+        yMin = y1, yMax = y2;
+        open = op;
+    }
+    bool operator < (const Edge &e) const {
+        return (x < e.x);
+    }
+};
+
+
+int n, m, h[maxN << 1];
+int sum[maxN << 5], counter[maxN << 5];
+vector<Edge> edges;
+
+
+
+void print ( )
+{   int maxsize=ceil(log2(num));
+     maxsize=2*pow(2,maxsize)-1;
+
+   for(int i= 1 ; i<=maxsize ; i++ )
+          cout<<sum[i]<<" ";
+    
+    cout<<endl;
+
+}
+
+void update(int p, int l, int r, int yMin, int yMax, bool open) {
+
+  if (h[r] < yMin || yMax < h[l]) return;
+
+  // if ymin is greater than h[r] which is array of sorted y coordinates or
+  // ymax is less than h[l] then l - r is not the required range
+
+ /*
+suppose our figure is like this ::
+          _(2,5)
+        _|_|_ (3,4)
+(0,3)  |_|_|_|
+  (1,2) _|_|_ (3,2)
+(0,1)  |_|_|_|
+  Three rectangles are there
+    1) 0,1 -> 3,2
+    2) 0,3 -> 3,4
+    3) 1,2 -> 2,5
+  h   -> [ 1 , 2 , 3,  4, 5 ]
+edges -> [ (0,1,2) (0,3,4) (1,2,5) (2,2,5) (3,1,2) (3,3,4) ]
+       Segment Tree using updation
+            (1,5)                        0         1          2          4          2         1         0
+     (1,3)        (3,5)                 0 0       1 0        1 1        2 2        1 1       0 1       0 0
+  (1,2) (2,3)  (3,4) (4,5)            0 0 0 0   1 0 0 0    1 0 1 0    1 1 1 0    1 0 1 0   0 0 1 0   0 0 0 0
+Question is what is actually done over here ?
+   1 ) Firstly we sorted the edges according to the x coordinate and h[] according to y coordinates.
+   2 ) then we started moving horizontal using a vertical sweep line to encounter 2  types of events : Left Edge,  Right Edge
+     i) Left Edge: on encountering a left edge, we move it into the active sets and update the total length
+                   of vertical sweep line that is cut by the rectangualar boxes , this is done by update function
+                   here we have two variable ymin (lower left y coordinate), ymax (upper left y coordinate) .
+                   using which we update the total length of sweep line intersected at that event, and after updating
+                   sum[1] gives the length of intersected sweep line at that x coordinate.
+     ii) Right Edge : On encountering a right edge, we again update the segment tree.
+   3) Function of segment tree is to store the intesected length at various x positions namely the events, whenever
+      we reach an edge we update the intersected length  , whenever we are at left edge we know that we have added an edge between
+      ymin and ymax therefore we need to add this to the sum at this position, if we are at right edge we know that we need to remove
+      an edge between ymin and ymax, we do so by reducing counter ,if counter is still not zero means there were overlapping rectss
+      and we sum[p] = h[r]- h[l] .
+     NOTE : at any time there will be only two types of rectangles in active sets we need to worry abt
+        ____                      __
+       |____|        OR          |__|
+           _____               __|__|__
+          |_____|             |__|__|__|
+  (One below or abv otr)     (overlapping once)
+ */
+
+
+    int c = p << 1, mid = (l + r) >> 1;
+
+    if (yMin <= h[l] && h[r] <= yMax) {         // ymin --- h[l] --- h[r] --- ymax
+        counter[p] += open ? 1 : -1;
+        if (counter[p]) sum[p] = h[r] - h[l];  //if there is a rectangle at that posn that is bw h[l] and h[r] we will add that to length
+        else sum[p] = sum[c] + sum[c + 1];    // else we will just sumup of lengths above and beloew this region
+        return;
+    }
+
+    if (l + 1 >= r) return;
+
+    update(c, l, mid, yMin, yMax, open);
+    update(c + 1, mid, r, yMin, yMax, open);
+
+    if (counter[p]) sum[p] = h[r] - h[l];
+    else sum[p] = sum[c] + sum[c + 1];
+
+
+
+}
+
+int64 solve() {
+                                // process height for horzntl. sweep line
+    sort(h + 1, h + m + 1);    //  Sorting the hieght according to the y coordinates
+    int k = 1;
+
+    FOR (i, 2, m) if (h[i] != h[k])  //  Deleting the same horizontal sweeplines
+       h[++k] = h[i];                //     as they are redundant
+           m = k;
+         num  = m;
+
+
+    for (int i = 0, lm = maxN << 4; i < lm; i++) // This is the initialization step of segment tree
+        sum[i] = 0, counter[i] = 0;
+
+
+
+    int64 area = 0LL;  //  Initializing the Area
+
+    sort(all(edges));  // Sorting according to x coordinates for ver. swp line
+
+    update(1, 1, m, edges[0].yMin, edges[0].yMax, edges[0].open);
+   // print();
+
+    for (int i = 1; i < edges.size(); i++) {
+        area += sum[1] * (int64)(edges[i].x - edges[i - 1].x);
+        update(1, 1, m, edges[i].yMin, edges[i].yMax, edges[i].open);
+      //  print();
+            }
+    return area;
+
+
+
+}
+
+int main() {
+      int n;
+      cin>>n;
+      int  x1, y1, x2, y2;
+
+        edges.clear();
+        m = 0;
+        FOR (i, 1, n) {
+            scanf("%d %d %d %d", &x1, &y1, &x2, &y2);
+
+
+            if(x1==x2 && y1>y2)swap(y1,y2);
+            else if(y1==y2   && x1>x2)swap(x1,x2);
+
+            x2+=1;    // x1 and y1 are bottom left coordinates
+            y2+=1;    // x2 and y2 are top right coordinates
+
+
+            edges.pb(Edge(x1, y1, y2, true));   // Inserting the Left edge
+            edges.pb(Edge(x2, y1, y2, false));  // Inserting the Right Edge
+
+            /*
+            (x1,y2)     (x2,y2)
+                _________
+               |         |
+   LeftEdge <- |         |-> Right Edge
+               |_________|
+            (x1,y1)     (x2,y1)
+            */
+
+
+            h[++m] = y1; // Inserting the Lower y Coordinate 1 based inddexiing
+            h[++m] = y2; // Inserting the Upper y Coordinate
+
+        }
+        printf("%lld\n", solve());
+
+    return 0;
+}
+
+\end{lstlisting}
+
+\section{Estruturas}
+\noindent\begin{lstlisting}[caption=Estruturas,language=C++]
+struct pv{
+    ld x, y;
+    pv(){}
+    pv(ld _x, ld _y){
+        x = _x;
+        y = _y;
+    }
+    
+    int getQuad(){
+        if(maiorIgual(x, 0.0) && maiorIgual(y, 0.0)) return 1;
+        if(menor(x, 0.0) && maiorIgual(y, 0.0)) return 2;
+        if(menorIgual(x, 0.0) && menor(y, 0.0)) return 3;
+        return 4;
+    }
+    
+    pv operator + (pv other){
+        return pv(x+other.x, y+other.y);
+    }
+    
+    pv operator - (pv other){
+        return pv(x-other.x, y-other.y);
+    }
+    
+    pv operator * (ld k){
+        return pv(x*k, y*k);
+    }
+    
+    pv operator / (ld k){
+        return pv(x/k, y/k);
+    }
+    
+    bool operator == (pv other){
+        return igual(x, other.x) && igual(y, other.y);
+    }
+};
+
+struct line{
+    pv p0, v;
+    line(){}
+    line(pv _p0, pv _v){
+        p0 = _p0;
+        v = _v;
+    }
+};
+
+struct seg{
+    pv a, b;
+    seg(){}
+    seg(pv _a, pv _b){
+        a = _a;
+        b = _b;
+    }
+};
+
+struct circle{
+    pv centro;
+    ld r;
+    circle(){}
+    circle(pv _centro, ld _r){
+        centro = _centro;
+        r = _r;
+    }
+};
+
+\end{lstlisting}
+
+\section{Funções básicas}
+\noindent\begin{lstlisting}[caption=Funções básicas,language=C++]
+bool igual(ld a, ld b){
+    return fabs(a-b) < EPS;
+}
+
+bool maior(ld a, ld b){
+    return a > EPS + b;
+}
+
+bool menor(ld a, ld b){
+    return a + EPS < b;
+}
+
+bool maiorIgual(ld a, ld b){
+    return maior(a, b) || igual(a, b);
+}
+
+bool menorIgual(ld a, ld b){
+    return menor(a, b) || igual(a, b);
+}
+
+ld cross(pv a, pv b){
+    return a.x * b.y - a.y * b.x;
+}
+
+ld dot(pv a, pv b){
+    return a.x * b.x + a.y * b.y;
+}
+
+ld distPt(pv a, pv b){
+    return hypot(a.x-b.x, a.y-b.y);
+}
+
+//norma de um vetor
+ld norma(pv a){
+    return sqrt(dot(a, a));
+}
+
+//retorna a menor distancia entre um ponto e uma reta
+ld distPtReta(pv pt, line r){
+    
+    return fabs(cross(r.v, pt - r.p0)) / norma(r.v);
+    
+}
+
+//retorna a menor distancia de um ponto a um segmento
+ld distPtSeg(pv pt, seg r){
+    if(maiorIgual(dot(pt - r.a, r.b - r.a), 0.0) && maiorIgual(dot(pt - r.b, r.a - r.b), 0.0))
+        return distPtReta(pt, line(r.a, r.b-r.a));
+    
+    return min(distPt(pt, r.a), distPt(pt, r.b));
+}
+
+
+//angulo entre a reta horizontal com y = 0 e o vetor v
+ld polarAngle(pv v){
+    ld x = v.x;
+    ld y = v.y;
+    
+    ld aux = atan2(y, x);
+    
+    if(menor(aux, 0.0)) aux += 2.0*PI;
+    
+    return aux;
+}
+
+//radiano para grau   
+ld toDegree(ld rad){
+    return rad * 180 / PI;
+}
+
+//angulo entre dois vetores (menor angulo)     
+ld angle2Vec(pv v, pv u){
+    ld ang1 = polarAngle(v);
+    ld ang2 = polarAngle(u);
+    ld ans = 0.0;
+    
+    ans = min(fabs(ang1 - ang2), fabs(2.0*PI+ang1 - ang2));
+    ans = min(ans, fabs(2.0*PI+ang2 - ang1));
+
+    return ans;
+}
+
+//checa se os pontos a, b, c estão em sentido anti horário  
+bool ccw(pv a, pv b, pv c){
+    ld aux = cross(b-a, c-b);
+    
+    return maior(aux, 0.0);
+}
+
+bool colinear(pv a, pv b, pv c){
+    return igual(cross(b-a, c-b), 0.0);
+}
+
+//retorna o sinal de um número 
+int sinal(ld res){
+    if(maior(res, 0.0)) return 1;
+    if(menor(res, 0.0)) return -1;
+    return 0;
+}
+
+\end{lstlisting}
+
+\section{Funções de comparação}
+\noindent\begin{lstlisting}[caption=Funções de comparação,language=C++]
+//ordena por x, se empatar por y     
+bool compareConvexHull(pv a, pv b){
+    if(igual(a.x, b.x)) return menor(a.y, b.y);
+    return menor(a.x, b.x);
+}
+
+//função pra ordenar em relação ao angulo polar só com cross 
+bool comparePolarAngle(pv a, pv b){
+    if(a==b) return true;
+    int q1 = a.getQuad();
+    int q2 = b.getQuad();
+    
+    if(q1==q2){
+        if(igual(cross(a, b), 0.0)) return menor(norma(a), norma(b));
+        return maior(cross(a, b), 0.0);
+    }
+    return q1 < q2;
+}
+\end{lstlisting}
+
+\section{Funções de reta}
+\noindent\begin{lstlisting}[caption=Funções de reta,language=C++]
+//checa se duas retas são paralelas       
+bool retasParalelas(line r, line s){
+    pv v = r.v;
+    pv u = s.v;
+    return igual(cross(v, u), 0.0);
+}
+
+//checa se duas retas são iguais      
+bool retasIguais(line r, line s){
+    pv p0 = r.p0;
+    pv p1 = s.p0;
+    pv v = r.v;
+    pv u = s.v;
+    
+    return retasParalelas(r, s) && igual(cross(v, p1-p0), 0.0);
+}
+
+//retorna o ponto de interseccao de duas retas   
+pv ptInterReta(line r, line s){
+    pv v = r.v;
+    pv u = s.v;
+    
+    pv p0 = r.p0;
+    pv p1 = s.p0;
+    
+    long double t = (u.x * (p0.y - p1.y) + u.y * (p1.x - p0.x)) / cross(v, u);
+    
+    return pv(p0.x + (v.x * t), p0.y + (v.y * t));
+}
+
+//função que retorna a mediatriz 
+line getMediatriz(pv a, pv b){
+    pv vet, medio, perp;
+    medio = (a+b)/2.0;
+    vet = b-a;
+    perp = pv(-vet.y, vet.x);
+    
+    return line(medio, perp);
+}
+\end{lstlisting}
+
+\section{Funções de polígono}
+\noindent\begin{lstlisting}[caption=Funções de polígono,language=C++]
+//calcula o perimetro de um poligono       
+ld perimetro(vector<pv> &polygon){
+    if((int)polygon.size()<=1) return 0.0;
+    
+    if(!(polygon[0] == polygon[(int)polygon.size()-1]))
+        polygon.pb(polygon[0]);
+    
+    ld ans = 0.0;
+    for (int i = 0; i < (int)polygon.size()-1; i++)
+    {
+        ans += distPt(polygon[i], polygon[i+1]);
+    }
+    return ans;
+}
+
+//calcula a area de um poligono    
+ld area(vector<pv> &polygon){
+    if((int)polygon.size()<=2) return 0.0;
+    
+    if(!(polygon[0] == polygon[(int)polygon.size()-1]))
+        polygon.pb(polygon[0]);
+    
+    ld ans = 0.0;
+    for (int i = 0; i < (int)polygon.size()-1; i++)
+    {
+        ans += cross(polygon[i], polygon[i+1]);
+    }
+    return fabs(ans)*0.5;
+}
+
+//gera a convex hull do vector pt    
+void convexHull(vector<pv> &polygon){
+    if((int)polygon.size() <= 2) return;
+    pv p1[(int)polygon.size() + 2];
+    pv p2[(int)polygon.size() + 2];
+    int sz1 = 0, sz2 = 0;
+    
+    sort(polygon.begin(), polygon.end(), compareConvexHull);
+    for (int i = 0; i < (int)polygon.size(); i++)
+    {
+        while (sz1 > 1 && ccw(p1[sz1-2], p1[sz1-1], polygon[i]))
+        {
+            sz1--;
+        }
+        p1[sz1++] = polygon[i];
+        
+        while (sz2 > 1 && !ccw(p2[sz2-2], p2[sz2-1], polygon[i]))
+        {
+            sz2--;
+        }
+        p2[sz2++] = polygon[i];
+    }
+    
+    polygon.clear();
+    for (int i = 0; i < sz1; i++)
+    {
+        polygon.pb(p1[i]);
+    }
+    
+    for (int i = sz2-2; i >= 1; i--)
+    {
+        polygon.pb(p2[i]);
+    }
+}
+
+//checar se ponto esta dentro de poligono em O(n) - comparação de ângulo    
+bool insidePolygon(pv p, vector<pv> &polygon){
+    if((int)polygon.size()<= 2) return false;
+    
+    if(!(polygon[0] == polygon[(int)polygon.size()-1])){
+        polygon.pb(polygon[0]);
+    }
+    bool naBorda = false;
+    
+    ld ang = 0.0;
+    for (int i = 0; i < polygon.size()-1; i++)
+    {
+        naBorda = naBorda || onSegment(p, seg(polygon[i], polygon[i+1]));
+        if(ccw(p, polygon[i], polygon[i+1])){
+            ang += angle2Vec(polygon[i] - p, polygon[i+1]-p);
+        }else{
+            ang -= angle2Vec(polygon[i] - p, polygon[i+1]-p);
+        }
+    }
+    return igual(fabs(ang), 2.0*PI) || naBorda;//se quiser totalmente dentro tem que ver se ele ta na borda
+}
+
+//checa se um ponto esta dentro de um triangulo (a, b, c)   
+bool insideTriangle(pv p, pv a, pv b, pv c){
+    if(onSegment(p, seg(a, b))) return true;
+    if(onSegment(p, seg(a, c))) return true;
+    if(onSegment(p, seg(b, c))) return true;
+    
+    return sinal(cross(b-a, p-a)) == sinal(cross(c-b, p-b)) && sinal(cross(c-b, p-b)) == sinal(cross(a-c, p-c));
+}
+
+//checa se um ponto esta dentro de um polígono em O(log n)   
+bool insidePolygonLogN(pv p, vector<pv> &polygon){//NAO PODE TER PONTOS COLINEARES
+    //CUIDADO COM POLIGONOS DEGENERADOS
+    if((int)polygon.size() == 0) return false;
+    
+    int sz;
+    if(polygon[0] == polygon[(int)polygon.size()-1]) sz = (int)polygon.size()-1;
+    else sz = (int)polygon.size();
+    
+    if(sz <= 2) return false;
+    
+    if(ccw(polygon[0], polygon[1], polygon[2])){
+        if(!(polygon[0] == polygon[(int)polygon.size()-1])) polygon.pb(polygon[0]);
+        reverse(polygon.begin(), polygon.end());
+    }
+    
+    int lo = 1, hi = sz-1, mid;
+    int c;
+    while (lo <= hi)
+    {
+        mid = (lo + hi)/2;
+        c = sinal(cross(polygon[mid] - polygon[0], p - polygon[0]));
+        if(c < 0){
+            lo = mid+1;
+        }else if(c > 0){
+            hi = mid-1;
+        }else{
+            if(mid == 1){
+                return insideTriangle(p, polygon[0], polygon[mid], polygon[mid+1]);
+            }else{
+                return insideTriangle(p, polygon[0], polygon[mid-1], polygon[mid]);
+            }
+        }
+    }
+    mid = (lo+hi)/2;
+    if(mid == 0 || mid == sz-1) return false;
+    
+    return insideTriangle(p, polygon[0], polygon[mid], polygon[mid+1]);
+}
+
+bool insidePolygonLogNConfiavel(pv p, vector<pv>& polygon){
+    vector<pv> lower, upper;
+    convexHull(polygon, lower, upper);//PRECISA QUE A CONVEX HULL RETORNE A LOWER E UPPER HULL
+    ld xMax, xMin, yMax, yMin;
+    ld up1, up2, dw1, dw2;
+    
+    
+    xMax = upper[(int)upper.size()-1].x;
+    xMin = upper[0].x;
+    
+    for (int i = 0; i < (int)upper.size(); i++)
+    {
+        yMax = max(yMax, upper[i].y);
+        yMin = min(yMin, upper[i].y);
+        if(upper[i].x == xMin){
+            up1 = max(up1, upper[i].y);
+            dw1 = min(dw1, upper[i].y);
+        }
+        if(upper[i].x == xMax){
+            up2 = max(up2, upper[i].y);
+            dw2 = min(dw2, upper[i].y);
+        }
+    }
+    for (int i = 0; i < (int)lower.size(); i++)
+    {
+        yMax = max(yMax, lower[i].y);
+        yMin = min(yMin, lower[i].y);
+        if(upper[i].x == xMin){
+            up1 = max(up1, lower[i].y);
+            dw1 = min(dw1, lower[i].y);
+        }
+        if(upper[i].x == xMax){
+            up2 = max(up2, lower[i].y);
+            dw2 = min(dw2, lower[i].y);
+        }
+    }
+    if(p.x < xMin || p.x > xMax || p.y < yMin || p.y > yMax) return false;
+    
+    if(p.x == xMin && (p.y < dw1 || p.y > up1)) return false;
+    if(p.x == xMax && (p.y < dw2 || p.y > up2)) return false;
+    
+    //nesse momento, o ponto tem x > xMin e x < xMax
+    int lo = 0, hi = (int)upper.size()-1;
+    int mid;
+    int ans1, ans2;
+    while (lo <= hi)
+    {
+        mid = (lo+hi)/2;
+        if(p.x >= upper[mid].x && p.x <= upper[mid+1].x){
+            ans1 = mid;
+            break;
+        }
+        if(p.x < upper[mid].x){
+            hi = mid-1;
+        }else{
+            lo = mid+1;
+        }
+    }
+    
+    lo = 0; hi = (int)lower.size()-1;
+    while (lo <= hi)
+    {
+        mid = (lo+hi)/2;
+        if(p.x >= lower[mid].x && p.x <= lower[mid+1].x){
+            ans2 = mid;
+            break;
+        }
+        if(p.x < lower[mid].x){
+            hi = mid-1;
+        }else{
+            lo = mid+1;
+        }
+    }
+    
+    if(onSegment(p, seg(upper[ans1], upper[ans1+1]))) return true;
+    if(onSegment(p, seg(lower[ans2], lower[ans2+1]))) return true;
+    
+    return sinal(cross(upper[ans1+1]-upper[ans1], p - upper[ans1]))==-1 && sinal(cross(lower[ans2+1] - lower[ans2], p - lower[ans2]))==1;
+}
+
+//FUNÇÃO DO JUNIOR (% significa cross)
+bool PointIsInsideConvexPolygon(vector<pv> &a, pv p) {
+  pv vp = p - a[0];
+  if(cross((a[1] - a[0]), vp) > 0) return 0;
+  int lo = 1, hi = a.size() - 1;
+  while(lo < hi) {
+    int md = (lo + hi + 1) >> 1;
+    if(cross((a[md] - a[0]), vp) < 0) lo = md;
+    else hi = md - 1;
+  }
+  if(hi == a.size() - 1) return false;
+  return cross(((a[lo + 1] - a[lo]), (p - a[lo]))) < 0;
+}
+
+//retorna a interseccao dos poligonos 
+int interPolygon(vector<pv> &polygon1, vector<pv>& polygon2, vector<pv> &interseccao){
+    
+    if(!(polygon1[0] == polygon1[(int)polygon1.size() - 1])) polygon1.pb(polygon1[0]);
+    if(!(polygon2[0] == polygon2[(int)polygon2.size() - 1])) polygon2.pb(polygon2[0]);
+    interseccao.clear();
+    
+    bool tem = false;
+    vector<seg> segmentos;
+    pv pt;
+    
+    for (int i = 0; i < (int)polygon1.size()-1; i++)
+    {
+        segmentos.pb(seg(polygon1[i], polygon1[i+1]));
+    }
+    for (int i = 0; i < (int)polygon2.size()-1; i++)
+    {
+        segmentos.pb(seg(polygon2[i], polygon2[i+1]));
+    }
+    
+    int res;
+    for (int i = 0; i < (int)segmentos.size(); i++)
+    {
+        for (int j = i+1; j < (int)segmentos.size(); j++)
+        {
+            res = interSegmento(segmentos[i], segmentos[j], pt);
+            if(res == 1){
+                if(insidePolygonLogN(pt, polygon1) && insidePolygonLogN(pt, polygon2)){
+                    interseccao.pb(pt);
+                    tem = true;
+                }
+            }else if(res == 2){
+                if(onSegment(segmentos[i].a, segmentos[j])){
+                    pt = segmentos[i].a;
+                    if(insidePolygonLogN(pt, polygon1) && insidePolygonLogN(pt, polygon2)){
+                        interseccao.pb(pt);
+                        tem = true;
+                    }
+                }
+                if(onSegment(segmentos[i].b, segmentos[j])){
+                    pt = segmentos[i].b;
+                    if(insidePolygonLogN(pt, polygon1) && insidePolygonLogN(pt, polygon2)){
+                        interseccao.pb(pt);
+                        tem = true;
+                    }
+                }
+                if(onSegment(segmentos[j].a, segmentos[i])){
+                    pt = segmentos[j].a;
+                    if(insidePolygonLogN(pt, polygon1) && insidePolygonLogN(pt, polygon2)){
+                        interseccao.pb(pt);
+                        tem = true;
+                    }
+                }
+                if(onSegment(segmentos[j].b, segmentos[i])){
+                    pt = segmentos[j].b;
+                    if(insidePolygonLogN(pt, polygon1) && insidePolygonLogN(pt, polygon2)){
+                        interseccao.pb(pt);
+                        tem = true;
+                    }
+                }
+            }
+        }
+        
+    }
+    if(!tem) return false;
+    
+    convexHull(interseccao);
+    
+    return true;
+}
+
+//funcao usada na cutPolygon para não repetir vértices em um corte
+void adiciona(vector<pv> &polygon, pv pt){
+    if((int)polygon.size() == 0){
+        polygon.pb(pt);
+    }else{
+        if(!(polygon[(int)polygon.size()-1] == pt))
+            polygon.pb(pt);
+    }
+}
+
+//NAO ACEITA PONTOS COLINEARES
+//0 - não cortou ou cortou na borda
+//1 - as duas partes tem area
+int cutPolygon(line r, vector<pv> &polygon, vector<pv> &lp, vector<pv> &rp){
+    if(!(polygon[0] == polygon[(int)polygon.size()-1])) 
+        polygon.pb(polygon[0]);
+    
+    lp.clear();
+    rp.clear();
+    int lado;
+    
+    int cortou = 0;
+    pv pt;
+    for (int i = 0; i < (int)polygon.size()-1; i++)
+    {
+        lado = sinal(cross(r.v, polygon[i] - r.p0));
+        
+        //teste de ponto
+        if(lado == 1){//esta à esquerda da linha
+            adiciona(lp, polygon[i]);
+        }else if(lado == -1){//esta à direita da linha
+            adiciona(rp, polygon[i]);
+        }
+        
+        //teste de intersecção
+        if(sinal(cross(r.v, polygon[i] - r.p0)) != sinal(cross(r.v, polygon[i+1] - r.p0))){//segmento está inteiro na reta (cortou na borda)
+            //nao faz nada pois os dois vertices serão adicionados na verificacao acima
+            cortou = 1;
+            pt = ptInterReta(line(polygon[i], polygon[i+1]-polygon[i]), r);
+            adiciona(lp, pt);
+            adiciona(rp, pt);
+        }
+    }
+    if((int)lp.size() > 2) adiciona(lp, lp[0]);
+    else lp.clear();
+    if((int)rp.size() > 2) adiciona(rp, rp[0]);
+    else rp.clear();
+    return cortou;
+}
+\end{lstlisting}
+
+\section{Funções de segmento}
+\noindent\begin{lstlisting}[caption=Funções de segmento,language=C++]
+//checa se ponto p está no segmento s   
+bool onSegment(pv p, seg s){
+    pv a = s.a;
+    pv b = s.b;
+    if(maiorIgual(dot(p-a, b-a), 0.0) && maiorIgual(dot(p-b, a-b), 0.0) && igual(cross(p-a, p-b), 0.0)) return true;
+    return false;
+}
+
+//checa se 2 segmentos se cruzam (pode ser na borda)   
+bool temInterSegmento(seg r, seg s){
+    pv a = r.a;
+    pv b = r.b;
+    pv c = s.a;
+    pv d = s.b;
+    
+    return sinal(cross(b-a, d-a)) != sinal(cross(b-a, c-a)) && sinal(cross(d-c, a-c)) != sinal(cross(d-c, b-c));
+}
+
+//checa se tem interseccao entre segmentos (0 - nao tem, 1 - tem, 2 - paralelos (SE TOCAM MAS NAO RETORNA O PONTO) )   
+int interSegmento(seg r, seg s, pv &ans){
+    pv a = r.a;
+    pv b = r.b;
+    pv c = s.a;
+    pv d = s.b;
+    if(retasIguais(line(a, b-a), line(c, d-c))){
+        
+        if(onSegment(c, r) || onSegment(d, r) || onSegment(a, s) || onSegment(b, s)){
+            return 2;
+        }
+        return 0;
+    }
+    if(temInterSegmento(r, s)){
+        ans = ptInterReta(line(a, b-a), line(c, d-c));
+        return 1;
+    }
+    return 0;
+}
+
+\end{lstlisting}
+
+\section{Line Sweep (Balão)}
+\noindent\begin{lstlisting}[caption=Line Sweep (Balão),language=C++]
+struct pv{
+    ll x, y;
+    pv(){}
+    pv(ll _x, ll _y){
+        x = _x;
+        y = _y;
+    }
+    pv operator - (pv other){
+        return pv(x-other.x, y-other.y);
+    }
+};
+
+struct event{
+    pv p;
+    int tipo, id;
+    event(){}
+    event(pv _p, int _tipo, int _id){
+        p = _p;
+        tipo = _tipo;
+        id = _id;
+    }
+    bool operator < (event other) const{
+        if(p.x == other.p.x) return tipo < other.tipo;
+        return p.x < other.p.x;
+    }
+};
+
+struct seg{
+    pv a, b;
+    seg(){}
+    seg(pv _a, pv _b){
+        a = _a;
+        b = _b;
+    }
+};
+
+
+int dp[MAXN][LOG];
+int qtdSeg, qtdBalao;
+vector<seg> segmento;
+vector<event> evento;
+vector<pv> vertice;
+vector<int> g[MAXN];
+
+ll cross(pv a, pv b){
+    return a.x*b.y - a.y*b.x;
+}
+
+ll func(pv a, pv b, pv c){
+    return cross(b-a, c-b);
+}
+
+bool compare(int _1, int _2){
+    pv a = segmento[_1].a;
+    pv b = segmento[_1].b;
+    pv c = segmento[_2].a;
+    pv d = segmento[_2].b;
+    
+    if(a.x < c.x){
+        if(func(a, c, b) > 0)
+            return false;
+        return true;
+    }else{
+        if(func(c, a, d) > 0)
+            return true;
+        return false;
+    }
+}
+set<int, bool(*)(int, int)> s(compare);
+
+void adicionar(int id){
+    s.insert(id);
+    set<int, bool(*)(int, int)>::iterator it;
+    if(segmento[id].a.y > segmento[id].b.y){
+        it = s.find(id);
+        it++;
+        if(it == s.end()){
+            vertice[id] = pv(segmento[id].a.x, INF);
+        }else{
+            if(segmento[*it].a.y == segmento[*it].b.y){
+                vertice[id] = pv(segmento[id].a.x, segmento[*it].a.y);
+            }else{
+                g[id].pb(*it);
+            }
+        }
+    }
+}
+
+void remover(int id){
+    set<int, bool(*)(int, int)>::iterator it;
+    if(segmento[id].a.y < segmento[id].b.y){
+        it = s.find(id);
+        it++;
+        if(it==s.end()){
+            vertice[id] = pv(segmento[id].b.x, INF);
+        }else{
+            if(segmento[*it].a.y == segmento[*it].b.y){
+                vertice[id] = pv(segmento[id].b.x, segmento[*it].a.y);
+            }else{
+                g[id].pb(*it);
+            }
+        }
+    }
+    s.erase(id);
+}
+
+void consultar(int id, int x){
+    set<int, bool(*)(int, int)>::iterator it;
+    if(s.size()==0){
+        vertice[id] = pv(x, INF);
+    }else{
+        it = s.begin();
+        if(segmento[*it].a.y == segmento[*it].b.y){
+            vertice[id] = pv(x, segmento[*it].a.y);
+        }else{
+            g[id].pb(*it);
+        }
+    }
+}
+
+void sweep(){
+    sort(evento.begin(), evento.end());
+    for (int i = 0; i < evento.size(); i++)
+    {
+        if(evento[i].tipo == ABRE)
+            adicionar(evento[i].id);
+        else if(evento[i].tipo == FECHA)
+            remover(evento[i].id);
+        else
+            consultar(evento[i].id, evento[i].p.x);
+    }
+}
+
+void build(){
+    for (int i = 0; i < qtdSeg + qtdBalao; i++)
+    {
+        if(g[i].size() == 0){
+            dp[i][0] = i;
+        }else{
+            dp[i][0] = g[i][0];
+        }
+    }
+    for (int j = 1; j < LOG; j++)
+    {
+        for (int i = 0; i < qtdSeg + qtdBalao; i++)
+        {
+            dp[i][j] = dp[dp[i][j-1]][j-1];
+        }
+    }
+}
+
+int pula(int u){
+    int d = MAXN;
+    for (int i = 0; i < LOG; i++)
+    {
+        if(d & (1<<i)){
+            u = dp[u][i];
+        }
+    }
+    return u;
+}
+
+void reset(){
+    segmento.clear();
+    evento.clear();
+    vertice.clear();
+    for (int i = 0; i < qtdSeg+qtdBalao; i++)
+    {
+        g[i].clear();
+    }
+}
+
+int main(){
+    ios_base::sync_with_stdio(0);
+    cin.tie(0);
+    
+    while(cin >> qtdSeg >> qtdBalao){
+        reset();
+        ll x, y, X2, Y2;
+        for (int i = 0; i < qtdSeg; i++)
+        {
+            cin >> x >> y >> X2 >> Y2;
+            if(x < X2){
+                segmento.pb(seg(pv(x, y), pv(X2, Y2)));
+            }else{
+                segmento.pb(seg(pv(X2, Y2), pv(x, y)));
+            }
+            evento.pb(event(segmento[i].a, ABRE, i));
+            evento.pb(event(segmento[i].b, FECHA, i));
+            vertice.pb(pv(-1, -1));
+        }
+        
+        for (int i = 0 + qtdSeg; i < qtdBalao + qtdSeg; i++)
+        {
+            cin >> x;
+            evento.pb(event(pv(x, 0), CONSULTA, i));
+            vertice.pb(pv(-1, -1));
+        }
+        
+        sweep();
+        build();
+        int ult;
+        for (int i = 0 + qtdSeg; i < qtdBalao+qtdSeg; i++)
+        {
+            ult = pula(i);
+            if(vertice[ult].y == INF) cout << vertice[ult].x << "\n";
+            else cout << vertice[ult].x << " " << vertice[ult].y << "\n";
+        }
+    }
+    return 0;
+}
+\end{lstlisting}
+
+\section{Rotação de ponto}
+\noindent\begin{lstlisting}[caption=Rotação de ponto,language=C++]
+//angulo deve estar em radiano
+pv rotacionaHorario(pv p, double rad)
+{
+    rad=-rad;
+    return pv(p.x * cos(rad) - p.y * sin(rad), p.x * sin(rad) + p.y * cos(rad));
+}
+
+pv rotacionaAntiHorario(pv p, double rad)
+{
+    return pv(p.x * cos(rad) - p.y * sin(rad), p.x * sin(rad) + p.y * cos(rad));
+}
+
+int main()
+{
+    //le o ponto
+    //chama a funcao pra rotacionar
+    return 0;
+}
+\end{lstlisting}
+
+\section{Rotating calipers}
+\noindent\begin{lstlisting}[caption=Rotating calipers,language=C++]
+int rotatingCalipers(vector<pv> &up, vector<pv> &dn){
+    int ans = 0;
+    
+    int i = 0, j = dn.size()-1; 
+    
+    while(i < (int)up.size() - 1 || j > 0){
+        // Entrou aqui: up[i] e dn[j] eh um antipodal pair
+        ans = max(ans, distPt(up[i],dn[j]));//NAO TIRAR A RAIZ NO DISTPT PARA EVITAR PRECISAO
+        
+        if(i == (int)up.size()-1) j--;
+        else if(j == 0) i++;
+        else{
+            // Verifica qual o menor angulo a ser rotacionado p utilizar na rotacao
+            if((up[i+1].y - up[i].y) * (dn[j].x - dn[j-1].x)
+                > (dn[j].y - dn[j-1].y) * (up[i+1].x - up[i].x ))
+                i++;
+            else
+                j--;
+        }
+    }
+    return ans;
+}
+
+\end{lstlisting}
+
+\section{Sweep Circle (esconde-esconde)}
+\noindent\begin{lstlisting}[caption=Sweep Circle (esconde-esconde),language=C++]
+#define ABRE 0 
+#define QUERY 1 
+#define FECHA 2 
+
+struct pv{
+    ll x, y;
+    pv(){}
+    pv(ll _x, ll _y){
+        x = _x;
+        y = _y;
+    }
+    
+    pv operator - (pv other){
+        return pv(x-other.x, y-other.y);
+    }
+};
+
+ll cross(pv a, pv b){
+    return a.x * b.y - a.y * b.x;
+}
+
+struct event{
+    pv pt;
+    int tipo, quadrante, id;
+    event(){}
+    event(pv _pt, int _tipo, int _quadrante, int _id){
+        pt = _pt;
+        tipo = _tipo;
+        quadrante = _quadrante;
+        id = _id;
+    }
+    bool operator < (event other) const{
+        ll c;
+        if(quadrante == other.quadrante){
+            c = cross(pt, other.pt);
+            if(c == 0){
+                return tipo < other.tipo;
+            }
+            return c > 0;
+        }
+        return quadrante < other.quadrante;
+    }
+};
+
+struct seg{
+    pv a, b;
+    int id;
+    seg(){}
+    seg(pv _a, pv _b){
+        a = _a;
+        b = _b;
+        id = -1;
+    }
+    seg(pv _a, pv _b, int _id){
+        a = _a;
+        b = _b;
+        id = _id;
+    }
+};
+
+
+ld distPt(pv a, pv b){
+    return hypot(a.x-b.x, a.y-b.y);
+}
+
+
+ll dot(pv a, pv b){
+    return a.x * b.x + a.y * b.y;
+}
+
+int sinal(ll res){
+    if(res > 0) return 1;
+    if(res < 0) return -1;
+    return 0;
+}
+
+//checa se 2 segmentos se cruzam (pode ser na borda) 
+bool temInterSegmento(seg r, seg s){
+    pv a = r.a;
+    pv b = r.b;
+    pv c = s.a;
+    pv d = s.b;
+    
+    return sinal(cross(b-a, d-a)) != sinal(cross(b-a, c-a)) && sinal(cross(d-c, a-c)) != sinal(cross(d-c, b-c));
+}
+
+void printaPonto(pv a){
+    printf("(%lld, %lld)  ", a.x, a.y);
+    
+}
+
+vector<pv> crianca;
+vector<seg> parede, tmpParede;
+vector<event> eve;
+int qtdParede, qtdCrianca, qtdProcura;
+pv origin;
+
+bool compareSet(int id1, int id2){
+    pv a = tmpParede[id1].a;
+    pv b = tmpParede[id1].b;
+    pv c = tmpParede[id2].a;
+    pv d = tmpParede[id2].b;
+    
+    return cross(d-a, b-a) > 0;
+}
+
+//~ set<int, bool(*)(int, int)> active(compareSet);
+set<int> active;
+
+int getQuadrante(pv pt){
+    ll x = pt.x;
+    ll y = pt.y;
+    if(x >= 0 && y >= 0) return 1;
+    if(x < 0 && y >= 0) return 2;
+    if(x <= 0 && y < 0) return 3;
+    if(x > 0 && y < 0) return 4;
+}
+
+bool needCut(seg r){
+    return r.a.y < 0 && r.b.y > 0;
+}
+
+int visivel(pv pt){
+    //inicio bruta
+    for (auto i : active)
+    {
+        seg r = tmpParede[i];
+        if(temInterSegmento(seg(pv(0, 0), pt), r)) return 0;
+    }
+    return 1;
+    
+    //fim bruta
+    if((int)active.size() == 0) return 1;
+    seg r = tmpParede[*active.begin()];
+    if(temInterSegmento(seg(pv(0, 0), pt), r)) return 0;
+    return 1;
+}
+
+int sweep(){
+    sort(eve.begin(), eve.end());
+    
+    int ans = 0;
+    
+    for (int i = 0; i < (int)eve.size(); i++)
+    {
+        if(eve[i].tipo == ABRE){
+            active.insert(eve[i].id);
+        }
+        else if(eve[i].tipo == FECHA){
+            active.erase(eve[i].id);
+        }else ans += visivel(eve[i].pt);
+    }
+    return ans;
+}
+
+int solve(int idx){
+    origin = crianca[idx];
+    eve.clear();
+    tmpParede.clear();
+    pv pt;
+    for (int i = 0; i < qtdCrianca; i++)
+    {
+        if(i==idx) continue;
+        pt = crianca[i] - origin;
+        eve.pb(event(pt, QUERY, getQuadrante(pt), -1));
+    }
+    
+    int cnt = 0;
+    seg nw;
+    for (int i = 0; i < qtdParede; i++)
+    {
+        nw = seg(parede[i].a - origin, parede[i].b - origin, cnt);
+        if(!needCut(nw)){
+            if(cross(nw.a, nw.b) > 0){
+                eve.pb(event(nw.a, ABRE, getQuadrante(nw.a), cnt));
+                eve.pb(event(nw.b, FECHA, getQuadrante(nw.b), cnt));
+            }else{
+                eve.pb(event(nw.b, ABRE, getQuadrante(nw.b), cnt));
+                eve.pb(event(nw.a, FECHA, getQuadrante(nw.a), cnt));
+            }
+            tmpParede.pb(nw);
+            cnt++;
+        }else{
+            if(cross(nw.b - nw.a, pv(0, 0) - nw.a) > 0){
+                eve.pb(event(pv(1,0), ABRE, 1, cnt));
+                eve.pb(event(nw.b, FECHA, getQuadrante(nw.b), cnt));
+                eve.pb(event(nw.a, ABRE, getQuadrante(nw.a), cnt));
+                eve.pb(event(pv(1, 0), FECHA, 4, cnt));
+            }else{
+                eve.pb(event(nw.b, ABRE, getQuadrante(nw.b), cnt));
+                eve.pb(event(pv(-1, 0), FECHA, 2, cnt));
+                eve.pb(event(pv(-1, 0), ABRE, 3, cnt));
+                eve.pb(event(nw.a, FECHA, getQuadrante(nw.a), cnt));
+            }
+            tmpParede.pb(nw);
+            cnt++;
+        }
+    }
+    return sweep();
+}
+
+void reset(){
+    eve.clear();
+    tmpParede.clear();
+    parede.clear();
+    crianca.clear();
+}
+
+int main(){
+    ios_base::sync_with_stdio(0);
+    cin.tie(0);
+    
+    ll x, y, x0, y0;
+    while (cin >> qtdProcura >> qtdCrianca >> qtdParede)
+    {
+        reset();
+        for (int i = 0; i < qtdCrianca; i++)
+        {
+            cin >> x >> y;
+            crianca.pb(pv(x, y));
+        }
+        for (int i = 0; i < qtdParede; i++)
+        {
+            cin >> x >> y >> x0 >> y0;
+            if(y < y0) parede.pb(seg(pv(x, y), pv(x0, y0), -1));
+            else parede.pb(seg(pv(x0, y0), pv(x, y), -1));
+        }
+        for (int i = 0; i < qtdProcura; i++)
+        {
+            cout << solve(i) << "\n";
+        }
+    }
+    
+    
+    return 0;
+}
+
+\end{lstlisting}
+
+\section{União do volume das caixas}
+\noindent\begin{lstlisting}[caption=União do volume das caixas,language=C++]
+// OBS: nesse problema cada caixa era definido por um ponto (x,y,z) e pela origem (0,0,0)
+#include <bits/stdc++.h>
+
+using namespace std;
+
+#define ft first
+#define sd second
+#define mp make_pair
+
+typedef long long ll;
+
+typedef struct ponto{
+    ll x, y, z;
+} Ponto;
+
+typedef struct node{
+    ll altMin;
+    ll altMax;
+    ll soma;
+} Node;
+
+
+bool cmp(Ponto a, Ponto b){
+    if(a.x != b.x)
+        return a.x > b.x;
+    if(a.y != b.y)
+        return a.y > b.y;
+    return a.z > b.z;
+}
+
+Ponto v[100005];
+
+// par de altura max / soma das alturas
+Node st[400005];
+ll lz[400005];
+
+void build(int no, int l, int r){
+    lz[no] = 0;
+    st[no].altMin = st[no].altMax = st[no].soma = 0LL;
+
+    if(l == r)
+        return;
+
+    build(no*2, l, (l+r)/2);
+    build(no*2+1, 1+(l+r)/2, r);
+    return;
+}
+
+void prop(int no, int l, int r){
+    if(!lz[no]) 
+        return;
+
+    st[no].altMin = st[no].altMax = lz[no];
+    st[no].soma = (r-l+1)*lz[no];
+    if(l != r) 
+        lz[no*2] = lz[no*2+1] = lz[no];
+
+    lz[no] = 0;
+    return;
+}
+
+int queryAlt(int no, int l, int r, int maior, int altura){ // me fala a primeira posicao <= maior q eh "mais baixa q o i" (tem z < vi.z)
+    prop(no, l, r);
+    if(st[no].altMax < altura)
+        return l;
+    if(l == r || st[no].altMin >= altura)
+        return maior;
+    return min(queryAlt(no*2, l, (l+r)/2, maior, altura), queryAlt(no*2+1, 1+(l+r)/2, r, maior, altura));
+}
+
+ll querySum(int no, int l, int r, int ini, int fim){
+    prop(no, l, r);
+    if(l > fim || r < ini)
+        return 0LL;
+    if(l >= ini && r <= fim)
+        return st[no].soma;
+    return querySum(no*2, l, (l+r)/2, ini, fim) + querySum(no*2+1, 1+(l+r)/2, r, ini, fim);
+}
+
+void update(int no, int l, int r, int ini, int fim, ll val){
+    prop(no, l, r);
+    if(l > fim || r < ini)
+        return;
+    if(l >= ini && r <= fim){
+        lz[no] = val;
+        prop(no, l, r);
+        return;
+    }
+
+    update(no*2, l, (l+r)/2, ini, fim, val);
+    update(no*2+1, 1+(l+r)/2, r, ini, fim, val);
+
+    st[no].altMin = min(st[no*2].altMin, st[no*2+1].altMin);
+    st[no].altMax = max(st[no*2].altMax, st[no*2+1].altMax);
+    st[no].soma = st[no*2].soma + st[no*2+1].soma;
+}
+
+main(){
+    while(1){
+        ll n, m;
+        scanf("%lld %lld", &n, &m);
+
+        if(!n && !m) break;
+
+        ll maxy = 0;
+        for(int i=0;i<n;i++){
+            scanf("%lld %lld %lld", &v[i].x, &v[i].y, &v[i].z);
+            maxy = max(v[i].y, maxy);
+        }
+        maxy += 2;
+
+        sort(v, v+n, cmp);
+        build(1, 1, maxy);
+
+        v[n].x = 0; // seta o menor x com zero
+        ll ans = 0;
+        for(int i=0;i<n;i++){
+            int l = queryAlt(1, 1, maxy, maxy, v[i].z); // me fala a primeira posicao q eh "mais baixa q eu"
+            if(l > v[i].y)
+                continue;
+
+            ll vaux = querySum(1, 1, maxy, l, v[i].y);
+            ll vun = (v[i].y-l+1) * v[i].z - vaux;
+            //printf("o volume de cada unidade eh %lld * %lld - %lld = %lld\n", v[i].y-l+1, v[i].z, vaux, vun);
+            //printf("a qtdd de unidades eh %lld\n", v[i].x, v[i+1].x, v[i].x-v[i+1].x);
+            //printf("o volume total do bloco eh %lld\n", vun * (v[i].x));
+            //printf("vou dar update de %lld no range %d %lld\n\n", v[i].z, l, v[i].y);
+
+            ans +=  vun * v[i].x;
+            update(1, 1, maxy, l, v[i].y, v[i].z);
+        }
+        printf("%lld\n", m*m*m-ans);
+    }
+}
+\end{lstlisting}
+
+
+
+\end{document} 
